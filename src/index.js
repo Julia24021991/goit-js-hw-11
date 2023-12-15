@@ -11,6 +11,7 @@ const paramsForNotify = {
     timeout: 4000,
     width: '400px',
     fontSize: '24px',
+    type: 'info',
 };
 
 const perPage = 40;
@@ -80,7 +81,6 @@ function onClickLoadMore() {
                 btnLoadMore.removeEventListener('click', onClickLoadMore);
                 window.removeEventListener('scroll', showLoadMorePage);
             }
-            lightbox.refresh();
         })
         .catch(onFetchError);
 }
