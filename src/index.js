@@ -1,104 +1,113 @@
-import { Notify } from 'notiflix/build/notiflix-notify-aio';
-import { fetchPhoto } from './js/pixabay_api';
-import { createMarkup } from './js/markup';
-import { refs } from './js/refs';
-import { lightbox } from './js/lightbox';
-
-const { searchFrom, gallery, btnLoadMore } = refs;
-
-const paramsForNotify = {
-    position: 'center-center',
-    timeout: 4000,
-    width: '400px',
-    fontSize: '24px',
-    type: 'info',
-};
-
-const perPage = 40;
+import axios from 'axios';
+import Notiflix from 'notiflix';
+import SimpleLightbox from 'simplelightbox';
+import 'simplelightbox/dist/simple-lightbox.min.css';
+import { createMarkup } from './markup';
+//
+const form = document.querySelector('.search-form');
+const gallery = document.querySelector('.gallery');
+const loadMore = document.querySelector('.load-more');
 let page = 1;
-let apiKeySearchPhoto = '';
-
-btnLoadMore.classList.add('is-hidden');
-
-searchFrom.addEventListener('submit', onSubmitForm);
-
-function onSubmitForm(event) {
+let currentSum = 0;
+//
+const lightbox = new SimpleLightbox('.gallery a', {
+    captionsData: 'alt',
+    captionDelay: 250,
+});
+//
+//
+loadMore.addEventListener('click', onLoadMore);
+form.addEventListener('submit', onValueSubmit);
+//
+//
+//
+//
+function onValueSubmit(event) {
     event.preventDefault();
     gallery.innerHTML = '';
-    page = 1;
-    const { searchQuery } = event.currentTarget.elements;
-    apiKeySearchPhoto = searchQuery.value
-        .trim()
-        .toLowerCase()
-        .split(' ')
-        .join('+');
-
-    if (apiKeySearchPhoto === '') {
-        Notify.info('Enter your request, please!', paramsForNotify);
-        return;
+    localStorage.clear();
+    //
+    //
+    const enteredValue = event.currentTarget[0].value.trim();
+    if (enteredValue === '') {
+        loadMore.classList.add('visibility-hidden');
+        return Notiflix.Notify.failure('All fields must be filled!');
     }
-
-    fetchPhoto(apiKeySearchPhoto, page, perPage)
-        .then(data => {
-            const searchResults = data.hits;
-            if (data.totalHits === 0) {
-                Notify.failure(
-                    'Sorry, there are no images matching your search query. Please try again.',
-                    paramsForNotify
-                );
-            } else {
-                Notify.info(
-                    `Hooray! We found ${data.totalHits} images.`,
-                    paramsForNotify
-                );
-                // console.log(searchResults);
-                createMarkup(searchResults);
-                lightbox.refresh();
-            }
-            if (data.totalHits > perPage) {
-                btnLoadMore.classList.remove('is-hidden');
-                window.addEventListener('scroll', showLoadMorePage);
-            }
-        })
-        .catch(onFetchError);
-    btnLoadMore.addEventListener('click', onClickLoadMore);
-    event.currentTarget.reset();
+    localStorage.setItem('key', enteredValue);
+    render();
+    form.reset();
 }
-
-function onClickLoadMore() {
-    page += 1;
-    fetchPhoto(apiKeySearchPhoto, page, perPage)
-        .then(data => {
-            const searchResults = data.hits;
-            const numberOfPage = Math.ceil(data.totalHits / perPage);
-            createMarkup(searchResults);
-            if (page === numberOfPage) {
-                btnLoadMore.classList.add('is-hidden');
-                Notify.info(
-                    "We're sorry, but you've reached the end of search results.",
-                    paramsForNotify
-                );
-                btnLoadMore.removeEventListener('click', onClickLoadMore);
-                window.removeEventListener('scroll', showLoadMorePage);
-            }
-        })
-        .catch(onFetchError);
-}
-function onFetchError() {
-    Notify.failure(
-        'Oops! Something went wrong! Try reloading the page or make another choice!',
-        paramsForNotify
-    );
-}
-
-function showLoadMorePage() {
-    if (scrollPage()) {
-        onClickLoadMore();
+//
+// 
+async function getGallery(page = 1) {
+    const BASE_URL = 'https://pixabay.com/api/';
+    const API_KEY = '41234154-1228a4e877b16a4c27b1fb598';
+    const q = localStorage.getItem('key');
+    const image_type = 'photo';
+    const orientation = 'horizontal';
+    const safesearch = 'true';
+    const per_page = 40;
+    //
+    //
+    const queryParams = new URLSearchParams({
+        key: API_KEY,
+        q,
+        image_type,
+        page,
+        per_page,
+        orientation,
+        safesearch,
+    });
+    try {
+        const res = await axios.get(`${BASE_URL}?${queryParams}`);
+        return await res.data;
+    } catch (error) {
+        throw new Error(error);
     }
 }
-
-function scrollPage() {
-    return (
-        window.innerHeight + window.scrollY >= document.documentElement.scrollHeight
-    );
+//
+//
+async function render() {
+    try {
+        const data = await getGallery(page);
+        //
+        //
+        if (!data.hits.length > 0) {
+            loadMore.classList.add('visibility-hidden');
+            return Notiflix.Notify.failure(
+                'Sorry, there are no images matching your search query. Please try again.'
+            );
+        }
+        //
+        gallery.insertAdjacentHTML('beforeend', createMarkup(data.hits));
+        //
+        check(data.hits.length, data.totalHits);
+        lightbox.refresh();
+    } catch (error) {
+        console.log('error!', error);
+    }
+}
+//
+// 
+async function onLoadMore() {
+    try {
+        page += 1;
+        const data = await render();
+    } catch (error) {
+        console.log('error!', error);
+    }
+    lightbox.refresh();
+}
+//
+//  
+function check(current, total) {
+    currentSum += current;
+    if (currentSum >= total) {
+        loadMore.classList.add('visibility-hidden');
+        return Notiflix.Notify.info(
+            "We're sorry, but you've reached the end of search results."
+        );
+    }
+    Notiflix.Notify.success(`Hooray! We found ${currentSum} of ${total} images`);
+    loadMore.classList.remove('visibility-hidden');
 }

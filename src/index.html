@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 
 <head>
   <meta charset="UTF-8" />
@@ -9,12 +9,17 @@
 </head>
 
 <body>
-  <form class="search-form" id="search-form">
-    <input type="text" name="searchQuery" autocomplete="off" placeholder="Search images..." />
-    <button type="submit">Search</button>
-  </form>
+  <div class="form-div">
+    <form class="search-form" id="search-form">
+      <input type="text" name="searchQuery" autocomplete="off" placeholder="Search images..." />
+      <button type="submit">Search</button>
+    </form>
+  </div>
+
   <div class="gallery"></div>
-  <button type="button" class="load-more">Load more</button>
+  <div class="div-btn">
+    <button type="button" class="load-more visibility-hidden">Load more</button>
+  </div>
 </body>
 <script type="module" src="./index.js"></script>
 

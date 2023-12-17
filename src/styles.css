@@ -14,19 +14,6 @@ img {
     border-radius: 5px;
 }
 
-.is-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    border: 0;
-    padding: 0;
-    white-space: nowrap;
-    clip-path: inset(100%);
-    clip: rect(0 0 0 0);
-    overflow: hidden;
-}
-
 .search-form {
     position: fixed;
     top: 0;
@@ -100,4 +87,18 @@ button:focus {
     margin: 40px auto;
     width: 200px;
     background-color: #aca9a9;
+}
+
+.visibility-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    border: 0;
+    padding: 0;
+    white-space: nowrap;
+    clip-path: inset(100%);
+    clip: rect(0 0 0 0);
+    overflow: hidden;
+    visibility: hidden;
 }
